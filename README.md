@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# The UK Edit BD — Curated from the UK
 
-## Getting Started
+E-commerce platform for **The UK Edit BD** (Dhaka): authentic beauty, skincare, fragrance, fashion, shoes, lifestyle and food & wellness products sourced from the UK. **Shop · Pre-order · Deliver.**
 
-First, run the development server:
+One Next.js app serves two experiences:
+
+- **Storefront** (`/`): open to everyone, no sign-in needed to browse. Signing in is required at checkout.
+- **Admin inventory & commerce system** (`/admin`): for staff only.
+
+Everyone uses the **same login page** (`/login`). After the password check, the backend looks up the account's role, and any email in `ADMIN_EMAILS` is always an admin. Admins/staff go to `/admin`; customers go back to the shop.
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env              # then set AUTH_SECRET (openssl rand -base64 32)
+npm install                       # runs `prisma generate`
+npx prisma migrate dev            # creates prisma/dev.db (SQLite)
+npm run db:seed                   # demo catalog, customers, orders, POs
+npm run dev                       # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Account  | Email                   | Password                              |
+| -------- | ----------------------- | ------------------------------------- |
+| Admin    | `admin@ukeditbd.com`    | `SEED_ADMIN_PASSWORD` (default `Admin@12345`) |
+| Customer | `customer@ukeditbd.com` | `Customer@123`                        |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Change the admin password after first login (**Admin → Settings**).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Features
 
-## Learn More
+**Storefront**
+- Editorial home page with logo-matched pastel category circles, featured products, a "How it works" section and a Fragrance spotlight
+- Shop with filters (category, department, size, price, sale, pre-order), sorting and brand/product search
+- Product page: gallery with hover zoom, colour/size pickers, per-size pricing (e.g. 50ml / 100ml), low-stock notices, wishlist
+- **Pre-order**: out-of-stock sizes on pre-order-enabled products can still be ordered, with sourcing time shown end to end
+- Slide-over bag, bag page, checkout with Cash on Delivery or mock card (cards ending in `0002` are declined)
+- Account area: overview, order history with status tracker and timeline, saved addresses, wishlist
 
-To learn more about Next.js, take a look at the following resources:
+**Admin IMS** (patterns from `satnaing/shadcn-admin`, Medusa and Saleor)
+- Collapsible sidebar with live badges, ⌘K command palette with live search, light/dark theme
+- Dashboard: revenue vs. previous period, AOV, gross margin, revenue chart (7/30/90d), order pipeline, sales by category, top products, reorder alerts
+- Reusable TanStack data tables: faceted filters, sorting, column visibility, bulk actions, CSV export
+- Products: create/edit, media upload and library, variant matrix generator, pre-order settings
+- Inventory: stock levels per SKU with reorder points, days of cover, 30-day sales velocity, add/remove/count adjustments, backorder tracking
+- Movements: an audit ledger of every stock change, linked to the order or PO that caused it
+- Orders: an enforced status state machine; cancelling or refunding restocks automatically; payment recording, notes, timeline
+- Purchase orders: auto-fill from low stock, submit, partial or full receiving that updates stock and unit cost
+- Suppliers, categories, customers (segments, LTV, role management), settings (profile, password, team)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Next.js 16 (App Router, Server Actions, `proxy.ts`) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui (Radix) · Prisma 7 + SQLite (better-sqlite3 adapter) · TanStack Table 8 · Recharts · Zustand · Zod · jose (JWT in httpOnly cookies) · bcryptjs
 
-## Deploy on Vercel
+### Moving to Postgres
+1. In `prisma/schema.prisma`, set `provider = "postgresql"`.
+2. Swap `@prisma/adapter-better-sqlite3` for `@prisma/adapter-pg` in `src/lib/db.ts` and `prisma/seed.ts`.
+3. Point `DATABASE_URL` at your database and run `npx prisma migrate dev`.
+4. Replace the two raw SQL snippets (`MAX(CAST(SUBSTR(...)))` and the low-stock `COUNT`) if your dialect needs it.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Production notes
+- Image uploads are written to `public/uploads/`. On serverless hosts, switch `src/lib/actions/admin/upload.ts` to object storage (S3, R2, Vercel Blob).
+- Demo product photography comes from the DummyJSON test CDN. Replace it with your own product photos before launch.
+- Card payments are mocked. Integrate SSLCommerz or bKash in `placeOrder` (`src/lib/actions/shop.ts`).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Scripts
+
+`dev` · `build` · `start` · `lint` · `typecheck` · `db:migrate` · `db:seed` · `db:reset` · `db:studio`

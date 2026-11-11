@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  serverExternalPackages: ["better-sqlite3", "@prisma/adapter-better-sqlite3"],
+  experimental: {
+    serverActions: { bodySizeLimit: "6mb" },
+  },
+  images: {
+    qualities: [75, 90],
+  },
   turbopack: {
     rules: {
       "*.css": {

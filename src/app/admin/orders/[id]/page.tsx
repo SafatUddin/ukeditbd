@@ -23,9 +23,6 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
   });
   if (!order) notFound();
 
-  const cost = order.items.reduce((s, i) => s + i.unitCost * i.quantity, 0);
-  const profit = order.subtotal - cost;
-
   return (
     <>
       <PageHeader title={`Order ${order.number}`} description={`Placed ${formatDateTime(order.createdAt)} · ${order.paymentMethod === "COD" ? "Cash on delivery" : "Card payment"}`}>
@@ -72,7 +69,6 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                 <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="tabular-nums">{formatPrice(order.shippingFee)}</dd></div>
                 {order.discount > 0 && <div className="flex justify-between"><dt className="text-muted-foreground">Discount</dt><dd className="tabular-nums">-{formatPrice(order.discount)}</dd></div>}
                 <div className="flex justify-between border-t pt-2 text-base font-semibold"><dt>Total</dt><dd className="tabular-nums">{formatPrice(order.total)}</dd></div>
-                <div className="flex justify-between text-xs text-muted-foreground"><dt>Gross profit</dt><dd className="tabular-nums">{formatPrice(profit)} ({order.subtotal ? ((profit / order.subtotal) * 100).toFixed(0) : 0}%)</dd></div>
               </dl>
             </CardContent>
           </Card>

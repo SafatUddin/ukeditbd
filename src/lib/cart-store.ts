@@ -59,7 +59,7 @@ export const useCart = create<CartState>()(
   ),
 );
 
-export { FREE_SHIPPING_THRESHOLD, shippingFor } from "./shipping";
+export { shippingFor } from "./shipping";
 
 export const cartSubtotal = (items: CartItem[]) => items.reduce((s, i) => s + i.price * i.quantity, 0);
 export const cartCount = (items: CartItem[]) => items.reduce((s, i) => s + i.quantity, 0);

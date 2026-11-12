@@ -89,7 +89,7 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
             <AccordionItem value="shipping">
               <AccordionTrigger>Shipping & returns</AccordionTrigger>
               <AccordionContent className="space-y-2 text-muted-foreground">
-                <p>Dhaka: ৳80 · Outside Dhaka: ৳150 · Complimentary on orders over ৳10,000.</p>
+                <p>Dhaka: ৳80 · Outside Dhaka: ৳150.</p>
                 <p>In-stock items ship from our Dhaka hub in 2–4 days. Pre-order items are bought from UK retailers and flown in, arriving in {product.preorderDays}–{product.preorderDays + 7} days.</p>
                 <p>Returns accepted within 14 days in original, unopened condition. Beauty, skincare and fragrance must be sealed.</p>
               </AccordionContent>

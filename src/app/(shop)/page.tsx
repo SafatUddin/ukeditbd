@@ -39,7 +39,7 @@ export default async function HomePage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/shop?sort=newest" className="group inline-flex h-12 items-center gap-2 rounded-full bg-navy px-7 text-sm text-white transition hover:bg-navy/90">
-                  Shop the edit <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                  Start Shopping  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
                 <Link href="/#how-it-works" className="inline-flex h-12 items-center gap-2 rounded-full border border-navy/20 px-7 text-sm text-navy transition hover:border-navy">
                   <Plane className="size-4" /> How pre-order works
@@ -111,7 +111,7 @@ export default async function HomePage() {
             {[
               { icon: ShoppingBag, title: "Shop in-stock", text: "Thousands of authentic UK products ready in our Dhaka hub. Delivered in 2–4 days." },
               { icon: Plane, title: "Pre-order from the UK", text: "Out of stock? Pre-order it. We buy from authorised UK retailers and fly it over in 10–21 days." },
-              { icon: Truck, title: "Delivered to your door", text: "Nationwide delivery with Cash on Delivery. Free on orders over ৳10,000." },
+              { icon: Truck, title: "Delivered to your door", text: "Nationwide delivery with Cash on Delivery." },
             ].map(({ icon: Icon, title, text }, i) => (
               <li key={title} className="relative rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5">
                 <span className="absolute top-6 right-6 font-display text-5xl text-gold/30">0{i + 1}</span>

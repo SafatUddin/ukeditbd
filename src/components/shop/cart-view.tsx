@@ -5,7 +5,7 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMounted } from "@/hooks/use-mounted";
-import { cartSubtotal, FREE_SHIPPING_THRESHOLD, shippingFor, useCart } from "@/lib/cart-store";
+import { cartSubtotal, shippingFor, useCart } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
 import { PreorderTag } from "./preorder-tag";
 import { QtyStepper } from "./cart-drawer";
@@ -57,10 +57,7 @@ export function CartView() {
       <aside className="h-fit space-y-4 rounded-2xl bg-cream p-6 lg:sticky lg:top-24">
         <h2 className="font-display text-2xl">Order summary</h2>
         <Row label="Subtotal" value={formatPrice(subtotal)} />
-        <Row label="Delivery (Dhaka)" value={shipping === 0 ? "Complimentary" : formatPrice(shipping)} />
-        {subtotal < FREE_SHIPPING_THRESHOLD && (
-          <p className="text-xs text-muted-foreground">Add {formatPrice(FREE_SHIPPING_THRESHOLD - subtotal)} more for complimentary delivery.</p>
-        )}
+        <Row label="Delivery" value={formatPrice(shipping)} />
         <div className="border-t pt-4">
           <Row label="Estimated total" value={formatPrice(subtotal + shipping)} bold />
         </div>

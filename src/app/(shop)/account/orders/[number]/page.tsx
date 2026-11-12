@@ -83,7 +83,7 @@ export default async function OrderDetailPage({ params, searchParams }: PageProp
           ))}
           <div className="space-y-2 p-5 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(order.subtotal)}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{order.shippingFee ? formatPrice(order.shippingFee) : "Complimentary"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{formatPrice(order.shippingFee)}</span></div>
             <div className="flex justify-between pt-2 text-base font-medium"><span>Total</span><span>{formatPrice(order.total)}</span></div>
           </div>
         </div>

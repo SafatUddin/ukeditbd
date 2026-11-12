@@ -158,7 +158,7 @@ export function CheckoutForm({ email, defaults, hasAddress }: { email: string; d
         </ul>
         <div className="space-y-2 border-t pt-4 text-sm">
           <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(subtotal)}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{shipping === 0 ? "Complimentary" : formatPrice(shipping)}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{formatPrice(shipping)}</span></div>
         </div>
         <div className="flex justify-between border-t pt-4 text-lg font-medium"><span>Total</span><span>{formatPrice(subtotal + shipping)}</span></div>
         <button disabled={pending} className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-ink text-sm text-white transition hover:bg-ink/85 disabled:opacity-60">

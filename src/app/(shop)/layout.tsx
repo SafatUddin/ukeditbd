@@ -4,7 +4,6 @@ import { Header } from "@/components/shop/header";
 
 const messages = [
   "Curated from the UK · 100% authentic",
-  "Complimentary delivery on orders over ৳10,000",
   "Pre-order anything — sourced from the UK for you",
   "Cash on Delivery available nationwide",
 ];

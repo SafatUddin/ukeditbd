@@ -21,7 +21,7 @@ import { formatPrice, slugify } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type Variant = ProductInput["variants"][number] & { key: string };
-type Initial = Omit<ProductInput, "variants"> & { variants: ProductInput["variants"] };
+type Initial = Omit<ProductInput, "variants" | "slug"> & { variants: ProductInput["variants"] } & { slug: string };
 
 const blank: Initial = {
   name: "",
@@ -50,7 +50,6 @@ export function ProductForm({ initial = blank, categories, library }: { initial?
   const router = useRouter();
   const [form, setForm] = useState(initial);
   const [variants, setVariants] = useState<Variant[]>(() => initial.variants.map((v) => ({ ...v, key: nextKey() })));
-  const [slugTouched, setSlugTouched] = useState(!!initial.id);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [sizesInput, setSizesInput] = useState("XS, S, M, L, XL");
   const [colorName, setColorName] = useState("");
@@ -128,10 +127,10 @@ export function ProductForm({ initial = blank, categories, library }: { initial?
             <CardHeader><CardTitle>General</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <Field label="Product name">
-                <Input value={form.name} onChange={(e) => { set("name", e.target.value); if (!slugTouched) set("slug", slugify(e.target.value)); }} placeholder="e.g. Oxford Gingham Shirt" />
+                <Input value={form.name} onChange={(e) => { set("name", e.target.value); set("slug", slugify(e.target.value)); }} placeholder="e.g. Oxford Gingham Shirt" />
               </Field>
               <Field label="URL handle" hint={`/product/${form.slug || "…"}`}>
-                <Input value={form.slug} onChange={(e) => { setSlugTouched(true); set("slug", slugify(e.target.value)); }} />
+                <Input value={form.slug} readOnly className="bg-muted/50" />
               </Field>
               <Field label="Description">
                 <Textarea rows={5} value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="Tell the story of this piece — fabric, fit, craftsmanship…" />

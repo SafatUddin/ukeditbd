@@ -22,7 +22,6 @@ const variantSchema = z.object({
 const productSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(2, "Name is required"),
-  slug: z.string().trim().optional(),
   description: z.string().trim().min(10, "Description should be at least 10 characters"),
   categoryId: z.string().min(1, "Choose a category"),
   gender: z.enum(["MEN", "WOMEN", "UNISEX"]),
@@ -47,7 +46,7 @@ export async function saveProduct(input: ProductInput): Promise<ActionResult<{ i
   const parsed = productSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid product");
   const { variants, images, id, ...p } = parsed.data;
-  const slug = slugify(p.slug || p.name);
+  const slug = slugify(p.name);
 
   const skus = variants.map((v) => v.sku.toUpperCase());
   if (new Set(skus).size !== skus.length) return fail("Each variant must have a unique SKU");

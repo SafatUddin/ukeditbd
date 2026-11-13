@@ -46,13 +46,14 @@ export function isActivePath(pathname: string, href: string) {
 
 export function AppSidebar({ user, badges }: Props) {
   const pathname = usePathname();
+  const { setOpenMobile, isMobile } = useSidebar();
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/admin">
+              <Link href="/admin" onClick={() => isMobile && setOpenMobile(false)}>
                 <Image src="/brand/logo.png" alt="The UK Edit BD" width={32} height={32} className="size-8 shrink-0 rounded-full bg-white ring-1 ring-gold/60" />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">The UK Edit BD</span>
@@ -73,7 +74,7 @@ export function AppSidebar({ user, badges }: Props) {
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActivePath(pathname, item.href)} tooltip={item.title}>
-                      <Link href={item.href}>
+                      <Link href={item.href} onClick={() => isMobile && setOpenMobile(false)}>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
@@ -97,7 +98,7 @@ export function AppSidebar({ user, badges }: Props) {
 }
 
 function NavUser({ user }: { user: Props["user"] }) {
-  const { isMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
   const { setTheme } = useTheme();
   return (
     <SidebarMenu>

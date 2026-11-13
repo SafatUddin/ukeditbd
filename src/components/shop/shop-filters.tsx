@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,6 +35,7 @@ function useParamsUpdater() {
 type Props = { categories: { slug: string; name: string; count: number }[]; sizes: string[] };
 
 export function ShopFilters(props: Props) {
+  const [open, setOpen] = useState(false);
   return (
     <>
       <aside className="hidden lg:block">
@@ -42,20 +43,24 @@ export function ShopFilters(props: Props) {
           <FilterPanel {...props} />
         </div>
       </aside>
-      <Sheet>
+      <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger className="flex h-11 items-center justify-center gap-2 rounded-full border text-sm lg:hidden">
           <SlidersHorizontal className="size-4" /> Filters
         </SheetTrigger>
         <SheetContent side="left" className="overflow-y-auto p-6">
           <SheetTitle className="font-display text-2xl">Filters</SheetTitle>
-          <FilterPanel {...props} />
+          <FilterPanel {...props} onClose={() => setOpen(false)} />
+          <div className="mt-6 pt-4 border-t">
+            <p className="eyebrow text-[11px] mb-3">Sort by</p>
+            <SortSelect onClose={() => setOpen(false)} />
+          </div>
         </SheetContent>
       </Sheet>
     </>
   );
 }
 
-function FilterPanel({ categories, sizes }: Props) {
+function FilterPanel({ categories, sizes, onClose }: Props & { onClose?: () => void }) {
   const { params, set, pending } = useParamsUpdater();
   const category = params.get("category");
   const gender = params.get("gender");
@@ -67,13 +72,14 @@ function FilterPanel({ categories, sizes }: Props) {
   const toggleSize = (s: string) => {
     const next = selectedSizes.includes(s) ? selectedSizes.filter((x) => x !== s) : [...selectedSizes, s];
     set({ size: next.join(",") || null });
+    onClose?.();
   };
 
   return (
     <div className={cn("transition-opacity", pending && "opacity-60")}>
       {active && (
         <button
-          onClick={() => set({ category: null, gender: null, size: null, min: null, max: null, sale: null, preorder: null, q: null })}
+          onClick={() => { set({ category: null, gender: null, size: null, min: null, max: null, sale: null, preorder: null, q: null }); onClose?.(); }}
           className="mb-4 flex items-center gap-1 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
           <X className="size-3" /> Clear all filters
@@ -86,7 +92,7 @@ function FilterPanel({ categories, sizes }: Props) {
             {categories.map((c) => (
               <button
                 key={c.slug}
-                onClick={() => set({ category: category === c.slug ? null : c.slug })}
+                onClick={() => { set({ category: category === c.slug ? null : c.slug }); onClose?.(); }}
                 className={cn("flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-cream", category === c.slug && "bg-cream font-medium")}
               >
                 {c.name} <span className="text-xs text-muted-foreground">{c.count}</span>
@@ -98,7 +104,7 @@ function FilterPanel({ categories, sizes }: Props) {
           <AccordionTrigger className="eyebrow text-[11px]">Department</AccordionTrigger>
           <AccordionContent className="flex gap-2">
             {[["WOMEN", "Women"], ["MEN", "Men"]].map(([v, l]) => (
-              <button key={v} onClick={() => set({ gender: gender === v ? null : v })} className={cn("flex-1 rounded-full border py-2 text-sm transition-colors", gender === v ? "border-ink bg-ink text-white" : "hover:border-foreground")}>
+              <button key={v} onClick={() => { set({ gender: gender === v ? null : v }); onClose?.(); }} className={cn("flex-1 rounded-full border py-2 text-sm transition-colors", gender === v ? "border-ink bg-ink text-white" : "hover:border-foreground")}>
                 {l}
               </button>
             ))}
@@ -121,17 +127,17 @@ function FilterPanel({ categories, sizes }: Props) {
               const checked = min === r.min && max === r.max;
               return (
                 <label key={r.label} className="flex cursor-pointer items-center gap-2.5 text-sm">
-                  <Checkbox checked={checked} onCheckedChange={() => set(checked ? { min: null, max: null } : { min: r.min || null, max: r.max || null })} />
+                  <Checkbox checked={checked} onCheckedChange={() => { set(checked ? { min: null, max: null } : { min: r.min || null, max: r.max || null }); onClose?.(); }} />
                   {r.label}
                 </label>
               );
             })}
             <label className="flex cursor-pointer items-center gap-2.5 pt-2 text-sm text-rose">
-              <Checkbox checked={params.get("sale") === "1"} onCheckedChange={(c) => set({ sale: c ? "1" : null })} />
+              <Checkbox checked={params.get("sale") === "1"} onCheckedChange={(c) => { set({ sale: c ? "1" : null }); onClose?.(); }} />
               On sale only
             </label>
             <label className="flex cursor-pointer items-center gap-2.5 text-sm text-navy">
-              <Checkbox checked={params.get("preorder") === "1"} onCheckedChange={(c) => set({ preorder: c ? "1" : null })} />
+              <Checkbox checked={params.get("preorder") === "1"} onCheckedChange={(c) => { set({ preorder: c ? "1" : null }); onClose?.(); }} />
               Available to pre-order
             </label>
           </AccordionContent>
@@ -141,10 +147,10 @@ function FilterPanel({ categories, sizes }: Props) {
   );
 }
 
-export function SortSelect() {
+export function SortSelect({ onClose }: { onClose?: () => void }) {
   const { params, set } = useParamsUpdater();
   return (
-    <Select value={params.get("sort") ?? "featured"} onValueChange={(v) => set({ sort: v === "featured" ? null : v })}>
+    <Select value={params.get("sort") ?? "featured"} onValueChange={(v) => { set({ sort: v === "featured" ? null : v }); onClose?.(); }}>
       <SelectTrigger className="w-48 rounded-full">
         <SelectValue />
       </SelectTrigger>

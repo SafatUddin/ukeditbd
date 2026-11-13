@@ -17,8 +17,8 @@ type U = { name: string; email: string; role: string } | null;
 export function AccountMenu({ user }: { user: U }) {
   if (!user) {
     return (
-      <Link href="/login" className="hidden h-10 items-center rounded-full px-3 text-[13px] tracking-wide hover:bg-black/5 sm:flex">
-        Sign in
+      <Link href="/login" aria-label="Sign in" className="flex size-10 items-center justify-center rounded-full hover:bg-black/5">
+        <User className="size-[18px]" strokeWidth={1.6} />
       </Link>
     );
   }

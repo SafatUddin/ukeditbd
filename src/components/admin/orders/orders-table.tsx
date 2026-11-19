@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { updateOrderStatus } from "@/lib/actions/admin/orders";
 import { formatDateTime, formatPrice } from "@/lib/format";
 import type { OrderStatusValue } from "@/lib/order-flow";
+import { paymentMethodLabel } from "@/lib/payment";
 
 export type OrderRow = {
   id: string;
@@ -27,6 +28,10 @@ export type OrderRow = {
   status: string;
   paymentStatus: string;
   paymentMethod: string;
+  paymentGateway: string;
+  paymentRef: string;
+  paidAmount: number;
+  dueAmount: number;
   total: number;
 };
 
@@ -77,10 +82,21 @@ const columns: ColumnDef<OrderRow>[] = [
     cell: ({ row }) => (
       <div className="flex flex-col items-start gap-0.5">
         <StatusBadge status={row.original.paymentStatus} />
-        <span className="text-[11px] text-muted-foreground">{row.original.paymentMethod === "COD" ? "Cash on delivery" : "Card"}</span>
+        <span className="text-[11px] text-muted-foreground">{paymentMethodLabel(row.original.paymentMethod, row.original.paymentGateway)}</span>
       </div>
     ),
     filterFn: facetFilterFn,
+  },
+  {
+    accessorKey: "paymentRef",
+    meta: { label: "TrxID / Ref" },
+    header: "TrxID / Ref",
+    cell: ({ row }) =>
+      row.original.paymentRef ? (
+        <span className="font-mono text-xs text-foreground">{row.original.paymentRef}</span>
+      ) : (
+        <span className="text-xs text-muted-foreground">—</span>
+      ),
   },
   { accessorKey: "paymentMethod", meta: { label: "Method" }, header: "Method", filterFn: facetFilterFn },
   {
@@ -89,6 +105,26 @@ const columns: ColumnDef<OrderRow>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Fulfilment" />,
     cell: ({ row }) => <StatusBadge status={row.original.status} />,
     filterFn: facetFilterFn,
+  },
+  {
+    accessorKey: "paidAmount",
+    meta: { label: "Paid advance" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Paid" className="justify-end" />,
+    cell: ({ row }) => (
+      <p className={`text-right tabular-nums ${row.original.paidAmount > 0 ? "font-medium text-emerald-700" : "text-muted-foreground"}`}>
+        {formatPrice(row.original.paidAmount)}
+      </p>
+    ),
+  },
+  {
+    accessorKey: "dueAmount",
+    meta: { label: "Remaining due" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Remaining" className="justify-end" />,
+    cell: ({ row }) => (
+      <p className={`text-right tabular-nums ${row.original.dueAmount > 0 ? "font-medium text-amber-700" : "text-muted-foreground"}`}>
+        {formatPrice(row.original.dueAmount)}
+      </p>
+    ),
   },
   {
     accessorKey: "total",
@@ -129,8 +165,26 @@ export function OrdersTable({ data, initialStatus, initialSearch }: { data: Orde
           title: "Fulfilment",
           options: ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"].map((s) => ({ label: s.charAt(0) + s.slice(1).toLowerCase(), value: s })),
         },
-        { columnId: "paymentStatus", title: "Payment", options: [{ label: "Paid", value: "PAID" }, { label: "Unpaid", value: "UNPAID" }, { label: "Refunded", value: "REFUNDED" }] },
-        { columnId: "paymentMethod", title: "Method", options: [{ label: "Cash on delivery", value: "COD" }, { label: "Card", value: "CARD" }] },
+        {
+          columnId: "paymentStatus",
+          title: "Payment",
+          options: [
+            { label: "20% Advance Paid", value: "PARTIALLY_PAID" },
+            { label: "Paid", value: "PAID" },
+            { label: "Unpaid", value: "UNPAID" },
+            { label: "Refunded", value: "REFUNDED" },
+          ],
+        },
+        {
+          columnId: "paymentMethod",
+          title: "Method",
+          options: [
+            { label: "bKash", value: "BKASH" },
+            { label: "SSLCommerz", value: "SSLCOMMERZ" },
+            { label: "Cash on delivery", value: "COD" },
+            { label: "Card", value: "CARD" },
+          ],
+        },
       ]}
       bulkActions={(rows, table) => {
         const ids = rows.map((r) => r.original.id);

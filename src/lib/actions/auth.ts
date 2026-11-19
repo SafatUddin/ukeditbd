@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { isStaffRole, type SessionRole } from "@/lib/auth/jwt";
-import { isAdminEmail } from "@/lib/auth/roles";
 import { createSession, deleteSession } from "@/lib/auth/session";
 
 export type AuthState = { error?: string; fieldErrors?: Record<string, string[] | undefined>; values?: Record<string, string> } | undefined;
@@ -46,9 +45,8 @@ export async function login(_: AuthState, formData: FormData): Promise<AuthState
     return { error: "Invalid email or password.", values };
   }
 
-  // The backend decides the role: emails listed in ADMIN_EMAILS are always admins.
-  const role = isAdminEmail(email) ? "ADMIN" : user.role;
-  await db.user.update({ where: { id: user.id }, data: { role, lastLoginAt: new Date() } });
+  const role = user.role;
+  await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await createSession({ userId: user.id, email: user.email, name: user.name, role });
 
   redirect(destinationFor(role, safeNext(formData.get("next"))));
@@ -64,7 +62,7 @@ export async function register(_: AuthState, formData: FormData): Promise<AuthSt
     return { fieldErrors: { email: ["An account with this email already exists"] }, values };
   }
 
-  const role: SessionRole = isAdminEmail(email) ? "ADMIN" : "CUSTOMER";
+  const role: SessionRole = "CUSTOMER";
   const user = await db.user.create({
     data: { name, email, role, passwordHash: await bcrypt.hash(password, 10), lastLoginAt: new Date() },
   });

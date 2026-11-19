@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 enum Role {
@@ -48,6 +48,7 @@ enum OrderStatus {
 
 enum PaymentStatus {
   UNPAID
+  PARTIALLY_PAID
   PAID
   REFUNDED
   FAILED
@@ -55,6 +56,8 @@ enum PaymentStatus {
 
 enum PaymentMethod {
   COD
+  BKASH
+  SSLCOMMERZ
   CARD
 }
 
@@ -232,11 +235,15 @@ model Order {
   status        OrderStatus   @default(PENDING)
   paymentStatus PaymentStatus @default(UNPAID)
   paymentMethod PaymentMethod @default(COD)
-  subtotal      Int
-  shippingFee   Int
-  discount      Int           @default(0)
-  total         Int
-  notes         String?
+  subtotal       Int
+  shippingFee    Int
+  discount       Int           @default(0)
+  total          Int
+  paidAmount     Int           @default(0)
+  dueAmount      Int           @default(0)
+  paymentRef     String?
+  paymentGateway String?
+  notes          String?
   items         OrderItem[]
   events        OrderEvent[]
   createdAt     DateTime      @default(now())

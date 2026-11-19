@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import { formatPrice } from "@/lib/format";
 import { orderStatusMessages as messages, orderTransitions as transitions, type OrderStatusValue } from "@/lib/order-flow";
+import { preorderAdvanceFor } from "@/lib/payment";
 import { assertAdmin, fail, type ActionResult } from "./guard";
 
 export async function updateOrderStatus(orderIds: string | string[], status: OrderStatusValue, note?: string): Promise<ActionResult> {
@@ -19,8 +21,8 @@ export async function updateOrderStatus(orderIds: string | string[], status: Ord
         where: { id: order.id },
         data: {
           status,
-          ...(status === "DELIVERED" && order.paymentMethod === "COD" && { paymentStatus: "PAID" }),
-          ...(restock && order.paymentStatus === "PAID" && { paymentStatus: "REFUNDED" }),
+          ...(status === "DELIVERED" && order.dueAmount > 0 && { paymentStatus: "PAID", paidAmount: order.total, dueAmount: 0 }),
+          ...(restock && (order.paymentStatus === "PAID" || order.paymentStatus === "PARTIALLY_PAID") && { paymentStatus: "REFUNDED" }),
           events: { create: { status, message: note?.trim() ? `${messages[status]} — ${note.trim()}` : messages[status], actor: user.name } },
         },
       });
@@ -42,11 +44,45 @@ export async function updateOrderStatus(orderIds: string | string[], status: Ord
   return { ok: true, message: `${eligible.length} order(s) marked ${status.toLowerCase()}${skipped ? ` · ${skipped} skipped` : ""}` };
 }
 
-export async function markOrderPaid(orderId: string): Promise<ActionResult> {
+export async function confirmPreorderAdvance(orderId: string): Promise<ActionResult> {
   const user = await assertAdmin();
+  const order = await db.order.findUnique({ where: { id: orderId }, select: { total: true, status: true } });
+  if (!order) return fail("Order not found");
+  const advance = preorderAdvanceFor(order.total);
+  const due = Math.max(0, order.total - advance);
   await db.order.update({
     where: { id: orderId },
-    data: { paymentStatus: "PAID", events: { create: { message: "Payment recorded as received", actor: user.name } } },
+    data: {
+      status: order.status === "PENDING" ? "CONFIRMED" : order.status,
+      paymentStatus: "PARTIALLY_PAID",
+      paidAmount: advance,
+      dueAmount: due,
+      events: {
+        create: {
+          status: order.status === "PENDING" ? "CONFIRMED" : undefined,
+          message: `20% bKash advance (${formatPrice(advance)}) verified — remaining ${formatPrice(due)} due on delivery`,
+          actor: user.name,
+        },
+      },
+    },
+  });
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: `20% advance (${formatPrice(advance)}) confirmed` };
+}
+
+export async function markOrderPaid(orderId: string): Promise<ActionResult> {
+  const user = await assertAdmin();
+  const order = await db.order.findUnique({ where: { id: orderId }, select: { total: true } });
+  if (!order) return fail("Order not found");
+  await db.order.update({
+    where: { id: orderId },
+    data: {
+      paymentStatus: "PAID",
+      paidAmount: order.total,
+      dueAmount: 0,
+      events: { create: { message: "Full payment recorded as received", actor: user.name } },
+    },
   });
   revalidatePath(`/admin/orders/${orderId}`);
   return { ok: true, message: "Payment marked as received" };

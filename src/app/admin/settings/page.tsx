@@ -4,7 +4,6 @@ import { StatusBadge } from "@/components/status-badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth/dal";
-import { adminEmails } from "@/lib/auth/roles";
 import { db } from "@/lib/db";
 import { formatDateTime, initials } from "@/lib/format";
 
@@ -13,7 +12,6 @@ export const metadata = { title: "Settings" };
 export default async function SettingsPage() {
   const user = await requireAdmin();
   const team = await db.user.findMany({ where: { role: { in: ["ADMIN", "STAFF"] } }, orderBy: { createdAt: "asc" }, select: { id: true, name: true, email: true, role: true, lastLoginAt: true } });
-  const pinned = adminEmails();
 
   return (
     <>
@@ -38,7 +36,7 @@ export default async function SettingsPage() {
         <CardHeader>
           <CardTitle>Team access</CardTitle>
           <CardDescription>
-            Everyone signs in through the same login page. The backend checks the account&apos;s role (and the <code className="rounded bg-muted px-1 font-mono text-xs">ADMIN_EMAILS</code> allow-list) and routes staff to this dashboard. Promote customers from the Customers page.
+            Everyone signs in through the same login page. The backend checks each account&apos;s role in the database and routes staff to this dashboard. Promote customers from the Customers page.
           </CardDescription>
         </CardHeader>
         <CardContent className="px-0">
@@ -50,7 +48,6 @@ export default async function SettingsPage() {
                   <p className="text-sm font-medium">{m.name} {m.id === user.id && <span className="text-xs text-muted-foreground">(you)</span>}</p>
                   <p className="truncate text-xs text-muted-foreground">{m.email}</p>
                 </div>
-                {pinned.includes(m.email) && <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">Pinned via ADMIN_EMAILS</span>}
                 <StatusBadge status={m.role} dot={false} />
                 <p className="hidden w-44 text-right text-xs text-muted-foreground md:block">{m.lastLoginAt ? `Last login ${formatDateTime(m.lastLoginAt)}` : "Never signed in"}</p>
               </div>

@@ -11,7 +11,7 @@ import { changePassword, updateProfile } from "@/lib/actions/admin/settings";
 
 export function ProfileForm({ name, phone, email }: { name: string; phone: string; email: string }) {
   const router = useRouter();
-  const [form, setForm] = useState({ name, phone });
+  const [form, setForm] = useState({ email, name, phone });
   const [pending, start] = useTransition();
   return (
     <form
@@ -26,7 +26,10 @@ export function ProfileForm({ name, phone, email }: { name: string; phone: strin
         });
       }}
     >
-      <div className="space-y-1.5"><Label className="text-xs">Email</Label><Input value={email} disabled /></div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Email</Label>
+        <Input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5"><Label className="text-xs">Full name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
         <div className="space-y-1.5"><Label className="text-xs">Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>

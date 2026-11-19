@@ -61,9 +61,9 @@ export default async function HomePage() {
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border bg-border md:grid-cols-4">
           {[
             { icon: BadgeCheck, title: "100% authentic", text: "Bought from UK retailers" },
-            { icon: Plane, title: "Pre-order anything", text: "Sourced from the UK for you" },
-            { icon: Wallet, title: "Cash on Delivery", text: "Pay when it arrives" },
-            { icon: RotateCcw, title: "14-day returns", text: "Free & effortless" },
+            { icon: Plane, title: "Pre-order anything", text: "20% bKash advance, 80% on delivery" },
+            { icon: Wallet, title: "Cash on Delivery", text: "Available on in-stock items" },
+            { icon: RotateCcw, title: "Direct UK import", text: "All sales & pre-orders final" },
           ].map(({ icon: Icon, title, text }) => (
             <div key={title} className="flex items-center gap-4 bg-white p-5">
               <Icon className="size-5 shrink-0 text-gold" strokeWidth={1.5} />

@@ -3,9 +3,9 @@
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { createSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/format";
-import { isAdminEmail } from "@/lib/auth/roles";
 import { assertAdmin, fail, type ActionResult } from "./guard";
 
 const categorySchema = z.object({
@@ -42,11 +42,30 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
   return { ok: true, message: "Category deleted" };
 }
 
-export async function updateProfile(input: { name: string; phone?: string }): Promise<ActionResult> {
+const profileSchema = z.object({
+  email: z.email("Enter a valid email address").transform((e) => e.toLowerCase().trim()),
+  name: z.string().trim().min(2, "Name is too short"),
+  phone: z.string().trim().optional(),
+});
+
+export async function updateProfile(input: { email: string; name: string; phone?: string }): Promise<ActionResult> {
   const user = await assertAdmin();
-  if (input.name.trim().length < 2) return fail("Name is too short");
-  await db.user.update({ where: { id: user.id }, data: { name: input.name.trim(), phone: input.phone?.trim() || null } });
+  const parsed = profileSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid profile");
+  const { email, name, phone } = parsed.data;
+
+  if (email !== user.email) {
+    const existing = await db.user.findUnique({ where: { email }, select: { id: true } });
+    if (existing && existing.id !== user.id) return fail("An account with this email already exists");
+  }
+
+  await db.user.update({
+    where: { id: user.id },
+    data: { email, name, phone: phone || null },
+  });
+  await createSession({ userId: user.id, email, name, role: user.role });
   revalidatePath("/admin", "layout");
+  revalidatePath("/", "layout");
   return { ok: true, message: "Profile updated" };
 }
 
@@ -74,7 +93,6 @@ export async function setUserRole(userId: string, role: "CUSTOMER" | "STAFF" | "
   if (actor.id === userId) return fail("You cannot change your own role");
   const target = await db.user.findUnique({ where: { id: userId } });
   if (!target) return fail("User not found");
-  if (isAdminEmail(target.email) && role !== "ADMIN") return fail("This email is listed in ADMIN_EMAILS and is always an admin");
   await db.user.update({ where: { id: userId }, data: { role } });
   revalidatePath("/admin/settings");
   revalidatePath("/admin/customers");

@@ -6,7 +6,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ProductGallery } from "@/components/shop/product-gallery";
 import { ProductGrid } from "@/components/shop/product-card";
 import { ProductPurchase } from "@/components/shop/product-purchase";
-import { getSession } from "@/lib/auth/dal";
+import { getCurrentUser } from "@/lib/auth/dal";
+import { isStaffRole } from "@/lib/auth/jwt";
 import { getProductBySlug, getRelatedProducts, getWishlistIds } from "@/lib/queries/catalog";
 import { formatPrice } from "@/lib/format";
 
@@ -20,8 +21,9 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const session = await getSession();
-  const [related, wishlist] = await Promise.all([getRelatedProducts(product.id, product.categoryId), getWishlistIds(session?.userId)]);
+  const user = await getCurrentUser();
+  const isAdmin = !!user && isStaffRole(user.role);
+  const [related, wishlist] = await Promise.all([getRelatedProducts(product.id, product.categoryId), getWishlistIds(user?.id)]);
   const onSale = !!product.compareAtPrice && product.compareAtPrice > product.price;
 
   return (
@@ -59,12 +61,13 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
             product={{ id: product.id, slug: product.slug, name: product.name, price: product.price, image: product.images[0]?.url ?? "", allowPreorder: product.allowPreorder, preorderDays: product.preorderDays }}
             variants={product.variants}
             wished={wishlist.has(product.id)}
+            isAdmin={isAdmin}
           />
 
           <div className="mt-8 grid grid-cols-3 gap-2 text-center text-[11px] text-muted-foreground">
             {[
               { icon: Truck, t: "In-stock: 2–4 day delivery" },
-              { icon: RotateCcw, t: "Free 14-day returns" },
+              { icon: RotateCcw, t: "All sales & pre-orders final" },
               { icon: ShieldCheck, t: "100% authentic, UK-sourced" },
             ].map(({ icon: Icon, t }) => (
               <div key={t} className="flex flex-col items-center gap-2 rounded-xl bg-cream p-3">

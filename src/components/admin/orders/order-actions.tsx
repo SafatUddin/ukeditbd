@@ -6,7 +6,7 @@ import { Banknote, CheckCircle2, Loader2, PackageCheck, Printer, RotateCcw, Send
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { addOrderNote, markOrderPaid, updateOrderStatus } from "@/lib/actions/admin/orders";
+import { addOrderNote, confirmPreorderAdvance, markOrderPaid, updateOrderStatus } from "@/lib/actions/admin/orders";
 import { orderTransitions, type OrderStatusValue } from "@/lib/order-flow";
 
 const actionMeta: Record<OrderStatusValue, { label: string; icon: React.ComponentType; destructive?: boolean }> = {
@@ -19,7 +19,17 @@ const actionMeta: Record<OrderStatusValue, { label: string; icon: React.Componen
   REFUNDED: { label: "Refund & restock", icon: RotateCcw, destructive: true },
 };
 
-export function OrderActions({ orderId, status, canMarkPaid }: { orderId: string; status: OrderStatusValue; canMarkPaid: boolean }) {
+export function OrderActions({
+  orderId,
+  status,
+  canMarkPaid,
+  canConfirmAdvance = false,
+}: {
+  orderId: string;
+  status: OrderStatusValue;
+  canMarkPaid: boolean;
+  canConfirmAdvance?: boolean;
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const next = orderTransitions[status];
@@ -54,9 +64,14 @@ export function OrderActions({ orderId, status, canMarkPaid }: { orderId: string
           </Button>
         );
       })}
+      {canConfirmAdvance && (
+        <Button size="sm" variant="outline" disabled={pending} onClick={() => run(() => confirmPreorderAdvance(orderId))}>
+          <Banknote /> Confirm 20% advance
+        </Button>
+      )}
       {canMarkPaid && (
         <Button size="sm" variant="outline" disabled={pending} onClick={() => run(() => markOrderPaid(orderId))}>
-          <Banknote /> Record payment
+          <Banknote /> Record full payment
         </Button>
       )}
       <Button size="sm" variant="ghost" className="ml-auto" onClick={() => window.print()}>

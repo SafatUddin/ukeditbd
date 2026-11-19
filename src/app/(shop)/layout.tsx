@@ -1,6 +1,8 @@
 import { CartDrawer } from "@/components/shop/cart-drawer";
 import { Footer } from "@/components/shop/footer";
 import { Header } from "@/components/shop/header";
+import { getCurrentUser } from "@/lib/auth/dal";
+import { isStaffRole } from "@/lib/auth/jwt";
 
 const messages = [
   "Curated from the UK · 100% authentic",
@@ -8,7 +10,10 @@ const messages = [
   "Cash on Delivery available nationwide",
 ];
 
-export default function ShopLayout({ children }: LayoutProps<"/">) {
+export default async function ShopLayout({ children }: LayoutProps<"/">) {
+  const user = await getCurrentUser();
+  const isAdmin = !!user && isStaffRole(user.role);
+
   return (
     <div className="flex min-h-svh flex-col bg-white">
       <div className="overflow-hidden bg-navy py-2 text-[11px] tracking-[0.16em] text-white/90 uppercase">
@@ -23,7 +28,7 @@ export default function ShopLayout({ children }: LayoutProps<"/">) {
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
-      <CartDrawer />
+      {!isAdmin && <CartDrawer />}
     </div>
   );
 }

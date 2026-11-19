@@ -33,7 +33,13 @@ export async function getShopProducts(f: ShopFilters) {
   const where: Prisma.ProductWhereInput = {
     status: "ACTIVE",
     ...(f.q && {
-      OR: [{ name: { contains: f.q } }, { brand: { contains: f.q } }, { description: { contains: f.q } }, { tags: { contains: f.q.toLowerCase() } }, { category: { name: { contains: f.q } } }],
+      OR: [
+        { name: { contains: f.q, mode: "insensitive" } },
+        { brand: { contains: f.q, mode: "insensitive" } },
+        { description: { contains: f.q, mode: "insensitive" } },
+        { tags: { contains: f.q, mode: "insensitive" } },
+        { category: { name: { contains: f.q, mode: "insensitive" } } },
+      ],
     }),
     ...(f.category && { category: { slug: f.category } }),
     ...(f.gender && { gender: { in: [f.gender, "UNISEX"] } }),

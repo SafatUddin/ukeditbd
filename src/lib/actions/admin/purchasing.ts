@@ -23,7 +23,7 @@ export async function createPurchaseOrder(input: POInput): Promise<ActionResult<
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid purchase order");
   const { items, submit, expectedAt, ...rest } = parsed.data;
 
-  const [{ max }] = await db.$queryRaw<{ max: number | bigint | null }[]>`SELECT MAX(CAST(SUBSTR(number, 4) AS INTEGER)) AS max FROM PurchaseOrder`;
+  const [{ max }] = await db.$queryRaw<{ max: number | bigint | null }[]>`SELECT MAX(CAST(SUBSTR(number, 4) AS INTEGER)) AS max FROM "PurchaseOrder"`;
   const number = `PO-${Math.max(Number(max ?? 0), 2026000) + 1}`;
   const po = await db.purchaseOrder.create({
     data: {

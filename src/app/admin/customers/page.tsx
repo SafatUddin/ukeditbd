@@ -12,6 +12,7 @@ export default async function CustomersPage({ searchParams }: PageProps<"/admin/
   const me = await requireAdmin();
   const sp = await searchParams;
   const users = await db.user.findMany({
+    where: { role: { not: "ADMIN" } },
     orderBy: { createdAt: "desc" },
     include: { orders: { where: { status: { notIn: ["CANCELLED", "REFUNDED"] } }, select: { total: true, createdAt: true } } },
   });

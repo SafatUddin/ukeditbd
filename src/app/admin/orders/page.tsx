@@ -24,12 +24,18 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ord
     status: o.status,
     paymentStatus: o.paymentStatus,
     paymentMethod: o.paymentMethod,
+    paymentGateway: o.paymentGateway ?? "",
+    paymentRef: o.paymentRef ?? "",
+    paidAmount: o.paidAmount,
+    dueAmount: o.dueAmount,
     total: o.total,
   }));
 
   const count = (s: string) => orders.filter((o) => o.status === s).length;
   const toFulfil = orders.filter((o) => ["PENDING", "CONFIRMED", "PROCESSING"].includes(o.status));
-  const codOutstanding = orders.filter((o) => o.paymentMethod === "COD" && o.paymentStatus === "UNPAID" && o.status !== "CANCELLED").reduce((s, o) => s + o.total, 0);
+  const totalDueOnDelivery = orders
+    .filter((o) => o.dueAmount > 0 && o.status !== "CANCELLED" && o.status !== "REFUNDED")
+    .reduce((s, o) => s + o.dueAmount, 0);
 
   return (
     <>
@@ -40,7 +46,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ord
           ["Confirmed", count("CONFIRMED"), "text-blue-600"],
           ["Processing", count("PROCESSING"), "text-indigo-600"],
           ["Shipped", count("SHIPPED"), "text-violet-600"],
-          ["COD outstanding", formatPrice(codOutstanding), ""],
+          ["Remaining due (COD)", formatPrice(totalDueOnDelivery), ""],
         ].map(([label, value, color]) => (
           <div key={label} className="rounded-xl border bg-card p-4">
             <p className="text-xs text-muted-foreground">{label}</p>

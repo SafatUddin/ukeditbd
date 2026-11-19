@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { requireUser } from "@/lib/auth/dal";
 import { db } from "@/lib/db";
 import { formatDateTime, formatPrice } from "@/lib/format";
+import { paymentMethodLabel } from "@/lib/payment";
 import { cn } from "@/lib/utils";
 
 const steps = ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"] as const;
@@ -14,7 +15,7 @@ const stepLabel = { PENDING: "Placed", CONFIRMED: "Confirmed", PROCESSING: "Pack
 
 export default async function OrderDetailPage({ params, searchParams }: PageProps<"/account/orders/[number]">) {
   const { number } = await params;
-  const { placed } = await searchParams;
+  const { placed, payment } = await searchParams;
   const user = await requireUser(`/account/orders/${number}`);
   const order = await db.order.findFirst({
     where: { number, userId: user.id },
@@ -31,9 +32,24 @@ export default async function OrderDetailPage({ params, searchParams }: PageProp
         <div className="flex items-start gap-4 rounded-2xl bg-emerald-50 p-6 text-emerald-900">
           <CheckCircle2 className="mt-0.5 size-6 shrink-0" />
           <div>
-            <p className="font-display text-2xl">Thank you — your order is confirmed.</p>
-            <p className="mt-1 text-sm text-emerald-800">We&apos;ve received order {order.number}. You&apos;ll receive updates as it makes its way to you.</p>
+            <p className="font-display text-2xl">
+              {order.paymentMethod === "BKASH" && order.paymentStatus === "UNPAID"
+                ? "Order received — verifying your bKash payment."
+                : "Thank you — your order is confirmed."}
+            </p>
+            <p className="mt-1 text-sm text-emerald-800">
+              {order.paymentMethod === "BKASH" && order.paymentStatus === "UNPAID"
+                ? `We've received order ${order.number} with your bKash reference (${order.paymentRef ?? "submitted"}). Once our team verifies the TrxID in bKash, your status will update to Confirmed.`
+                : `We've received order ${order.number}. You'll receive updates as it makes its way to you.`}
+            </p>
           </div>
+        </div>
+      )}
+      {(payment === "failed" || payment === "cancelled") && (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
+          {payment === "cancelled"
+            ? "Your SSLCommerz payment was cancelled and this order was cancelled."
+            : "Your SSLCommerz payment could not be completed. Please try placing the order again."}
         </div>
       )}
 
@@ -85,6 +101,12 @@ export default async function OrderDetailPage({ params, searchParams }: PageProp
             <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(order.subtotal)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{formatPrice(order.shippingFee)}</span></div>
             <div className="flex justify-between pt-2 text-base font-medium"><span>Total</span><span>{formatPrice(order.total)}</span></div>
+            {order.paidAmount > 0 && (
+              <div className="flex justify-between text-emerald-700"><span>Paid online</span><span>{formatPrice(order.paidAmount)}</span></div>
+            )}
+            {order.dueAmount > 0 && (
+              <div className="flex justify-between text-muted-foreground"><span>Due on delivery</span><span>{formatPrice(order.dueAmount)}</span></div>
+            )}
           </div>
         </div>
 
@@ -96,7 +118,8 @@ export default async function OrderDetailPage({ params, searchParams }: PageProp
             <p className="text-muted-foreground">{order.area}, {order.city} {order.postalCode}</p>
             <p className="text-muted-foreground">{order.phone}</p>
             <p className="eyebrow mt-5 mb-2 text-muted-foreground">Payment</p>
-            <p>{order.paymentMethod === "COD" ? "Cash on Delivery" : "Card"}</p>
+            <p>{paymentMethodLabel(order.paymentMethod, order.paymentGateway)}</p>
+            {order.paymentRef && <p className="mt-1 font-mono text-xs text-muted-foreground">Ref: {order.paymentRef}</p>}
           </div>
           <div className="rounded-2xl border p-5">
             <p className="eyebrow mb-4 text-muted-foreground">Activity</p>

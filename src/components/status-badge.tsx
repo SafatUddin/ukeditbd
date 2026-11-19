@@ -21,6 +21,7 @@ const map: Record<string, [string, Tone]> = {
   CANCELLED: ["Cancelled", "red"],
   REFUNDED: ["Refunded", "gray"],
   UNPAID: ["Unpaid", "amber"],
+  PARTIALLY_PAID: ["20% Advance Paid", "blue"],
   PAID: ["Paid", "green"],
   FAILED: ["Failed", "red"],
   DRAFT: ["Draft", "gray"],
@@ -43,6 +44,8 @@ const map: Record<string, [string, Tone]> = {
   STAFF: ["Staff", "blue"],
   CUSTOMER: ["Customer", "gray"],
   COD: ["Cash on delivery", "gray"],
+  BKASH: ["bKash", "violet"],
+  SSLCOMMERZ: ["SSLCommerz", "indigo"],
   CARD: ["Card", "indigo"],
 };
 

@@ -13,7 +13,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const cookieStore = await cookies();
   const [orders, lowStock, openPOs] = await Promise.all([
     db.order.count({ where: { status: { in: ["PENDING", "CONFIRMED"] } } }),
-    db.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) as n FROM ProductVariant WHERE stock <= reorderPoint`.then((r) => Number(r[0]?.n ?? 0)),
+    db.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) as n FROM "ProductVariant" WHERE stock <= "reorderPoint"`.then((r) => Number(r[0]?.n ?? 0)),
     db.purchaseOrder.count({ where: { status: { in: ["ORDERED", "PARTIAL"] } } }),
   ]);
 

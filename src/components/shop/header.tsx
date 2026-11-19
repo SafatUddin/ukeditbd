@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Heart } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { getCurrentUser } from "@/lib/auth/dal";
+import { isStaffRole } from "@/lib/auth/jwt";
 import { db } from "@/lib/db";
 import { AccountMenu } from "./account-menu";
 import { CartButton } from "./cart-button";
@@ -41,10 +42,14 @@ export async function Header() {
         <div className="flex items-center justify-end gap-0.5">
           <SearchButton />
           <AccountMenu user={user ? { name: user.name, email: user.email, role: user.role } : null} />
-          <Link href="/account/wishlist" aria-label="Wishlist" className="hidden size-10 items-center justify-center rounded-full hover:bg-navy/5 sm:flex">
-            <Heart className="size-[18px]" strokeWidth={1.6} />
-          </Link>
-          <CartButton />
+          {!(user && isStaffRole(user.role)) && (
+            <>
+              <Link href="/account/wishlist" aria-label="Wishlist" className="hidden size-10 items-center justify-center rounded-full hover:bg-navy/5 sm:flex">
+                <Heart className="size-[18px]" strokeWidth={1.6} />
+              </Link>
+              <CartButton />
+            </>
+          )}
         </div>
       </div>
     </header>

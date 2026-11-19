@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/lib/db";
 import { formatDateTime, formatPrice, initials } from "@/lib/format";
 import type { OrderStatusValue } from "@/lib/order-flow";
+import { paymentMethodLabel } from "@/lib/payment";
 
 export default async function AdminOrderPage({ params }: PageProps<"/admin/orders/[id]">) {
   const { id } = await params;
@@ -25,12 +26,17 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
 
   return (
     <>
-      <PageHeader title={`Order ${order.number}`} description={`Placed ${formatDateTime(order.createdAt)} · ${order.paymentMethod === "COD" ? "Cash on delivery" : "Card payment"}`}>
+      <PageHeader title={`Order ${order.number}`} description={`Placed ${formatDateTime(order.createdAt)} · ${paymentMethodLabel(order.paymentMethod, order.paymentGateway)}${order.paymentRef ? ` · Ref ${order.paymentRef}` : ""}`}>
         <StatusBadge status={order.status} />
         <StatusBadge status={order.paymentStatus} />
       </PageHeader>
 
-      <OrderActions orderId={order.id} status={order.status as OrderStatusValue} canMarkPaid={order.paymentStatus === "UNPAID" && order.status !== "CANCELLED"} />
+      <OrderActions
+        orderId={order.id}
+        status={order.status as OrderStatusValue}
+        canConfirmAdvance={order.paymentStatus === "UNPAID" && order.status !== "CANCELLED" && order.items.some((i) => i.preorder)}
+        canMarkPaid={(order.paymentStatus === "UNPAID" || order.paymentStatus === "PARTIALLY_PAID") && order.status !== "CANCELLED"}
+      />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="space-y-6">
@@ -69,6 +75,8 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                 <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="tabular-nums">{formatPrice(order.shippingFee)}</dd></div>
                 {order.discount > 0 && <div className="flex justify-between"><dt className="text-muted-foreground">Discount</dt><dd className="tabular-nums">-{formatPrice(order.discount)}</dd></div>}
                 <div className="flex justify-between border-t pt-2 text-base font-semibold"><dt>Total</dt><dd className="tabular-nums">{formatPrice(order.total)}</dd></div>
+                {order.paidAmount > 0 && <div className="flex justify-between text-emerald-700"><dt>Paid online</dt><dd className="tabular-nums">{formatPrice(order.paidAmount)}</dd></div>}
+                {order.dueAmount > 0 && <div className="flex justify-between text-muted-foreground"><dt>Due on delivery</dt><dd className="tabular-nums">{formatPrice(order.dueAmount)}</dd></div>}
               </dl>
             </CardContent>
           </Card>

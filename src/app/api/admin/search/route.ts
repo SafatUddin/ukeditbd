@@ -12,15 +12,15 @@ export async function GET(request: Request) {
   if (q.length < 2) return NextResponse.json([]);
 
   const [products, variants, orders, customers] = await Promise.all([
-    db.product.findMany({ where: { name: { contains: q } }, take: 5, select: { id: true, name: true, price: true, status: true } }),
-    db.productVariant.findMany({ where: { sku: { contains: q } }, take: 3, select: { sku: true, stock: true, product: { select: { id: true, name: true } } } }),
+    db.product.findMany({ where: { name: { contains: q, mode: "insensitive" } }, take: 5, select: { id: true, name: true, price: true, status: true } }),
+    db.productVariant.findMany({ where: { sku: { contains: q, mode: "insensitive" } }, take: 3, select: { sku: true, stock: true, product: { select: { id: true, name: true } } } }),
     db.order.findMany({
-      where: { OR: [{ number: { contains: q } }, { customerName: { contains: q } }, { email: { contains: q } }] },
+      where: { OR: [{ number: { contains: q, mode: "insensitive" } }, { customerName: { contains: q, mode: "insensitive" } }, { email: { contains: q, mode: "insensitive" } }] },
       take: 5,
       orderBy: { createdAt: "desc" },
       select: { id: true, number: true, customerName: true, total: true },
     }),
-    db.user.findMany({ where: { role: "CUSTOMER", OR: [{ name: { contains: q } }, { email: { contains: q } }] }, take: 4, select: { id: true, name: true, email: true } }),
+    db.user.findMany({ where: { role: "CUSTOMER", OR: [{ name: { contains: q, mode: "insensitive" } }, { email: { contains: q, mode: "insensitive" } }] }, take: 4, select: { id: true, name: true, email: true } }),
   ]);
 
   return NextResponse.json([

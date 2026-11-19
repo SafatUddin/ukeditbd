@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { Check, Plane, ShoppingBag } from "lucide-react";
+import { Check, Plane, Shield, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { PREORDER_MAX_QTY, useCart } from "@/lib/cart-store";
 import { formatPrice, variantLabel } from "@/lib/format";
@@ -14,9 +15,10 @@ type Props = {
   product: { id: string; slug: string; name: string; price: number; image: string; allowPreorder: boolean; preorderDays: number };
   variants: Variant[];
   wished: boolean;
+  isAdmin?: boolean;
 };
 
-export function ProductPurchase({ product, variants, wished }: Props) {
+export function ProductPurchase({ product, variants, wished, isAdmin = false }: Props) {
   const colors = [...new Map(variants.map((v) => [v.color, v])).values()];
   const [color, setColor] = useState(colors[0]?.color ?? null);
   const forColor = variants.filter((v) => v.color === color);
@@ -34,6 +36,7 @@ export function ProductPurchase({ product, variants, wished }: Props) {
   const displayPrice = variant?.price ?? forColor.find((v) => v.price)?.price ?? product.price;
 
   const onAdd = () => {
+    if (isAdmin) return toast.error("Admin accounts can preview the storefront only and cannot add items to bag.");
     if (!variant) return toast.error("Please select a size");
     add(
       {
@@ -122,27 +125,39 @@ export function ProductPurchase({ product, variants, wished }: Props) {
           <div>
             <p className="font-medium">{isPreorder ? "Available to pre-order" : "Some sizes available to pre-order"}</p>
             <p className="text-muted-foreground">
-              We&apos;ll source it from the UK for you. Estimated delivery in {product.preorderDays}–{product.preorderDays + 7} days. Pay on delivery or by card today.
+              We&apos;ll source it from the UK for you. Estimated delivery in {product.preorderDays}–{product.preorderDays + 7} days. 20% upfront via bKash / SSLCommerz; pay the remaining 80% on delivery.
             </p>
           </div>
         </div>
       )}
 
-      <div className="flex gap-3">
-        {variant && <QtyStepper value={qty} max={maxQty} onChange={setQty} />}
-        <button
-          onClick={onAdd}
-          disabled={allOut || (variant && unavailable(variant))}
-          className={cn(
-            "flex h-12 flex-1 items-center justify-center gap-2 rounded-full text-sm text-white transition disabled:bg-muted disabled:text-muted-foreground",
-            isPreorder ? "bg-rose hover:bg-rose/90" : "bg-ink hover:bg-ink/85",
-          )}
-        >
-          {added ? <Check className="size-4" /> : isPreorder ? <Plane className="size-4" /> : <ShoppingBag className="size-4" />}
-          {allOut ? "Sold out" : added ? "Added to bag" : isPreorder ? "Pre-order now" : "Add to bag"}
-        </button>
-        <WishlistButton productId={product.id} initial={wished} withLabel />
-      </div>
+      {isAdmin ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-navy/15 bg-cream px-4 py-3 text-sm">
+          <div className="flex items-center gap-2.5 text-navy">
+            <Shield className="size-4 shrink-0 text-gold" />
+            <span>Admin preview mode — adding to bag &amp; purchasing are disabled.</span>
+          </div>
+          <Link href={`/admin/products/${product.id}`} className="text-xs font-medium text-navy underline underline-offset-4 hover:text-rose">
+            Edit in Admin
+          </Link>
+        </div>
+      ) : (
+        <div className="flex gap-3">
+          {variant && <QtyStepper value={qty} max={maxQty} onChange={setQty} />}
+          <button
+            onClick={onAdd}
+            disabled={allOut || (variant && unavailable(variant))}
+            className={cn(
+              "flex h-12 flex-1 items-center justify-center gap-2 rounded-full text-sm text-white transition disabled:bg-muted disabled:text-muted-foreground",
+              isPreorder ? "bg-rose hover:bg-rose/90" : "bg-ink hover:bg-ink/85",
+            )}
+          >
+            {added ? <Check className="size-4" /> : isPreorder ? <Plane className="size-4" /> : <ShoppingBag className="size-4" />}
+            {allOut ? "Sold out" : added ? "Added to bag" : isPreorder ? "Pre-order now" : "Add to bag"}
+          </button>
+          <WishlistButton productId={product.id} initial={wished} withLabel />
+        </div>
+      )}
     </div>
   );
 }
